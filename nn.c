@@ -1,6 +1,6 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 #define INPUT_SIZE 784
@@ -39,8 +39,7 @@ void softmax(float *input, int size) {
         input[i] = expf(input[i] - max);
         sum += input[i];
     }
-    for (int i = 0; i < size; i++)
-        input[i] /= sum;
+    for (int i = 0; i < size; i++) input[i] /= sum;
 }
 
 void init_layer(Layer *layer, int in_size, int out_size) {
@@ -59,8 +58,7 @@ void init_layer(Layer *layer, int in_size, int out_size) {
 }
 
 void forward(Layer *layer, float *input, float *output) {
-    for (int i = 0; i < layer->output_size; i++)
-        output[i] = layer->biases[i];
+    for (int i = 0; i < layer->output_size; i++) output[i] = layer->biases[i];
 
     for (int j = 0; j < layer->input_size; j++) {
         float in_j = input[j];
@@ -74,8 +72,8 @@ void forward(Layer *layer, float *input, float *output) {
         output[i] = output[i] > 0 ? output[i] : 0;
 }
 
-
-void backward(Layer *layer, float *input, float *output_grad, float *input_grad, float lr) {
+void backward(Layer *layer, float *input, float *output_grad, float *input_grad,
+              float lr) {
     if (input_grad) {
         for (int j = 0; j < layer->input_size; j++) {
             input_grad[j] = 0.0f;
@@ -94,19 +92,18 @@ void backward(Layer *layer, float *input, float *output_grad, float *input_grad,
             float grad = output_grad[i] * in_j;
             momentum_row[i] = MOMENTUM * momentum_row[i] + lr * grad;
             weight_row[i] -= momentum_row[i];
-            if (input_grad)
-                input_grad[j] += output_grad[i] * weight_row[i];
+            if (input_grad) input_grad[j] += output_grad[i] * weight_row[i];
         }
     }
 
     for (int i = 0; i < layer->output_size; i++) {
-        layer->bias_momentum[i] = MOMENTUM * layer->bias_momentum[i] + lr * output_grad[i];
+        layer->bias_momentum[i] =
+            MOMENTUM * layer->bias_momentum[i] + lr * output_grad[i];
         layer->biases[i] -= layer->bias_momentum[i];
     }
 }
 
-
-float* train(Network *net, float *input, int label, float lr) {
+float *train(Network *net, float *input, int label, float lr) {
     static float final_output[OUTPUT_SIZE];
     float hidden_output[HIDDEN_SIZE];
     float output_grad[OUTPUT_SIZE] = {0}, hidden_grad[HIDDEN_SIZE] = {0};
@@ -137,13 +134,13 @@ int predict(Network *net, float *input) {
 
     int max_index = 0;
     for (int i = 1; i < OUTPUT_SIZE; i++)
-        if (final_output[i] > final_output[max_index])
-            max_index = i;
+        if (final_output[i] > final_output[max_index]) max_index = i;
 
     return max_index;
 }
 
-void read_mnist_images(const char *filename, unsigned char **images, int *nImages) {
+void read_mnist_images(const char *filename, unsigned char **images,
+                       int *nImages) {
     FILE *file = fopen(filename, "rb");
     if (!file) exit(1);
 
@@ -159,11 +156,13 @@ void read_mnist_images(const char *filename, unsigned char **images, int *nImage
     cols = __builtin_bswap32(cols);
 
     *images = malloc((*nImages) * IMAGE_SIZE * IMAGE_SIZE);
-    fread(*images, sizeof(unsigned char), (*nImages) * IMAGE_SIZE * IMAGE_SIZE, file);
+    fread(*images, sizeof(unsigned char), (*nImages) * IMAGE_SIZE * IMAGE_SIZE,
+          file);
     fclose(file);
 }
 
-void read_mnist_labels(const char *filename, unsigned char **labels, int *nLabels) {
+void read_mnist_labels(const char *filename, unsigned char **labels,
+                       int *nLabels) {
     FILE *file = fopen(filename, "rb");
     if (!file) exit(1);
 
@@ -190,7 +189,6 @@ void shuffle_data(unsigned char *images, unsigned char *labels, int n) {
         labels[j] = temp;
     }
 }
-
 
 int main() {
     Network net;
@@ -219,21 +217,23 @@ int main() {
             for (int k = 0; k < INPUT_SIZE; k++)
                 img[k] = data.images[i * INPUT_SIZE + k] / 255.0f;
 
-            float* final_output = train(&net, img, data.labels[i], learning_rate);
+            float *final_output =
+                train(&net, img, data.labels[i], learning_rate);
             total_loss += -logf(final_output[data.labels[i]] + 1e-10f);
         }
         int correct = 0;
         for (int i = train_size; i < data.nImages; i++) {
             for (int k = 0; k < INPUT_SIZE; k++)
                 img[k] = data.images[i * INPUT_SIZE + k] / 255.0f;
-            if (predict(&net, img) == data.labels[i])
-                correct++;
+            if (predict(&net, img) == data.labels[i]) correct++;
         }
         end = clock();
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-        printf("Epoch %d, Accuracy: %.2f%%, Avg Loss: %.4f, Time: %.2f seconds\n", 
-               epoch + 1, (float)correct / test_size * 100, total_loss / train_size, cpu_time_used);
+        printf(
+            "Epoch %d, Accuracy: %.2f%%, Avg Loss: %.4f, Time: %.2f seconds\n",
+            epoch + 1, (float)correct / test_size * 100,
+            total_loss / train_size, cpu_time_used);
     }
 
     free(net.hidden.weights);
