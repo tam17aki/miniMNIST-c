@@ -33,13 +33,18 @@ typedef struct {
 
 void softmax(float *input, int size) {
     float max = input[0], sum = 0;
-    for (int i = 1; i < size; i++)
-        if (input[i] > max) max = input[i];
+    for (int i = 1; i < size; i++) {
+        if (input[i] > max) {
+            max = input[i];
+        }
+    }
     for (int i = 0; i < size; i++) {
         input[i] = expf(input[i] - max);
         sum += input[i];
     }
-    for (int i = 0; i < size; i++) input[i] /= sum;
+    for (int i = 0; i < size; i++) {
+        input[i] /= sum;
+    }
 }
 
 void init_layer(Layer *layer, int in_size, int out_size) {
@@ -53,12 +58,15 @@ void init_layer(Layer *layer, int in_size, int out_size) {
     layer->weight_momentum = calloc(n, sizeof(float));
     layer->bias_momentum = calloc(out_size, sizeof(float));
 
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
         layer->weights[i] = ((float)rand() / RAND_MAX - 0.5f) * 2 * scale;
+    }
 }
 
 void forward(Layer *layer, float *input, float *output) {
-    for (int i = 0; i < layer->output_size; i++) output[i] = layer->biases[i];
+    for (int i = 0; i < layer->output_size; i++) {
+        output[i] = layer->biases[i];
+    }
 
     for (int j = 0; j < layer->input_size; j++) {
         float in_j = input[j];
@@ -68,8 +76,9 @@ void forward(Layer *layer, float *input, float *output) {
         }
     }
 
-    for (int i = 0; i < layer->output_size; i++)
+    for (int i = 0; i < layer->output_size; i++) { /* ReLU activation */
         output[i] = output[i] > 0 ? output[i] : 0;
+    }
 }
 
 void backward(Layer *layer, float *input, float *output_grad, float *input_grad,
@@ -92,7 +101,9 @@ void backward(Layer *layer, float *input, float *output_grad, float *input_grad,
             float grad = output_grad[i] * in_j;
             momentum_row[i] = MOMENTUM * momentum_row[i] + lr * grad;
             weight_row[i] -= momentum_row[i];
-            if (input_grad) input_grad[j] += output_grad[i] * weight_row[i];
+            if (input_grad) {
+                input_grad[j] += output_grad[i] * weight_row[i];
+            }
         }
     }
 
@@ -112,13 +123,15 @@ float *train(Network *net, float *input, int label, float lr) {
     forward(&net->output, hidden_output, final_output);
     softmax(final_output, OUTPUT_SIZE);
 
-    for (int i = 0; i < OUTPUT_SIZE; i++)
+    for (int i = 0; i < OUTPUT_SIZE; i++) {
         output_grad[i] = final_output[i] - (i == label);
+    }
 
     backward(&net->output, hidden_output, output_grad, hidden_grad, lr);
 
-    for (int i = 0; i < HIDDEN_SIZE; i++)
+    for (int i = 0; i < HIDDEN_SIZE; i++) {
         hidden_grad[i] *= hidden_output[i] > 0 ? 1 : 0;  // ReLU derivative
+    }
 
     backward(&net->hidden, input, hidden_grad, NULL, lr);
 
@@ -133,8 +146,11 @@ int predict(Network *net, float *input) {
     softmax(final_output, OUTPUT_SIZE);
 
     int max_index = 0;
-    for (int i = 1; i < OUTPUT_SIZE; i++)
-        if (final_output[i] > final_output[max_index]) max_index = i;
+    for (int i = 1; i < OUTPUT_SIZE; i++) {
+        if (final_output[i] > final_output[max_index]) {
+            max_index = i;
+        }
+    }
 
     return max_index;
 }
@@ -164,7 +180,9 @@ void read_mnist_images(const char *filename, unsigned char **images,
 void read_mnist_labels(const char *filename, unsigned char **labels,
                        int *nLabels) {
     FILE *file = fopen(filename, "rb");
-    if (!file) exit(1);
+    if (!file) {
+        exit(1);
+    }
 
     int temp;
     fread(&temp, sizeof(int), 1, file);
@@ -214,8 +232,9 @@ int main() {
         start = clock();
         float total_loss = 0;
         for (int i = 0; i < train_size; i++) {
-            for (int k = 0; k < INPUT_SIZE; k++)
+            for (int k = 0; k < INPUT_SIZE; k++) {
                 img[k] = data.images[i * INPUT_SIZE + k] / 255.0f;
+            }
 
             float *final_output =
                 train(&net, img, data.labels[i], learning_rate);
@@ -223,9 +242,12 @@ int main() {
         }
         int correct = 0;
         for (int i = train_size; i < data.nImages; i++) {
-            for (int k = 0; k < INPUT_SIZE; k++)
+            for (int k = 0; k < INPUT_SIZE; k++) {
                 img[k] = data.images[i * INPUT_SIZE + k] / 255.0f;
-            if (predict(&net, img) == data.labels[i]) correct++;
+            }
+            if (predict(&net, img) == data.labels[i]) {
+                correct++;
+            }
         }
         end = clock();
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
