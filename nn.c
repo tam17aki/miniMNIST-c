@@ -158,7 +158,9 @@ int predict(Network *net, float *input) {
 void read_mnist_images(const char *filename, unsigned char **images,
                        int *nImages) {
     FILE *file = fopen(filename, "rb");
-    if (!file) exit(1);
+    if (!file) {
+        exit(1);
+    }
 
     int temp, rows, cols;
     fread(&temp, sizeof(int), 1, file);
